@@ -2,9 +2,8 @@ package com.example.minitweet
 
 import android.app.Activity
 import android.content.Context
-import android.content.SharedPreferences
-import android.telephony.ims.ImsException
 import android.util.Log
+import android.view.Gravity
 import android.view.LayoutInflater
 import android.view.View
 import android.widget.ImageView
@@ -34,7 +33,6 @@ class DataFetch(val activity: Activity) {
                 val profilePicURL = response.getJSONObject("data").getString("profile_image_url")
                 Glide.with(context).load(profilePicURL).into(profilePic)
                 val userID = response.getJSONObject("data").getString("id")
-                Log.i("HA",userID)
                 fetchtweets(activity,twitter_handle,userID,nameStr,profilePicURL)
             },
             Response.ErrorListener { error ->
@@ -62,40 +60,21 @@ class DataFetch(val activity: Activity) {
         val jsonObjectRequest =object : JsonObjectRequest(
             Method.GET, url, null,
             Response.Listener { response ->
-
-                val userId = response.getJSONArray("data")
-                for (i in 0 until userId.length()) {
-                    Log.i("START","funStart")
-                    val jsonTweetObj = userId.getJSONObject(i)
+                val json = response
+                val data = json.getJSONArray("data")
+                for (i in 0 until data.length()) {
+                    val jsonTweetObj = data.getJSONObject(i)
                     val mediaKey = jsonTweetObj.optJSONObject("attachments")
-                    if (mediaKey == null) {
-                        val layoutinflater: LayoutInflater = LayoutInflater.from(context)
-                        val view: View = layoutinflater.inflate(R.layout.card,scrollist,false)
-                        val tweetpost = view.findViewById<TextView>(R.id.profileName)
-                        val tweethandle = view.findViewById<TextView>(R.id.twitterhandle)
-                        val tweetPic = view.findViewById<ImageView>(R.id.profilePic)
-                        val tweetText = view.findViewById<TextView>(R.id.tweetcontent)
-                        val tweetDate = view.findViewById<TextView>(R.id.date)
-                        val tweetPicture = view.findViewById<ImageView>(R.id.tweetPicture)
-                        tweetPicture.visibility = View.GONE
-                        tweetpost.text = userName
-                        tweethandle.text = "@"+handle
-                        tweetDate.text = jsonTweetObj.getString("created_at").substring(0,10)
-                        tweetText.text = jsonTweetObj.getString("text")
-                        Glide.with(context).load(userPic).into(tweetPic)
-                        scrollist.addView(view,0)
-                    }
-                    else {
+                    if (mediaKey !== null) {
                         val extractedMediaKey = mediaKey.getJSONArray("media_keys").getString(0)
-                        Log.i("KEY",extractedMediaKey)
                         val tweetPostPic = response.getJSONObject("includes").getJSONArray("media")
-                        for (i in 0 until tweetPostPic.length()) {
-                            val mediaKeyCompare = tweetPostPic.getJSONObject(i).getString("media_key")
-                            val isPic = tweetPostPic.getJSONObject(i).getString("type")
-                            Log.i("TYPE",isPic)
+                        for (j in 0 until tweetPostPic.length()) {
+                            val mediaKeyCompare = tweetPostPic.getJSONObject(j).getString("media_key")
+                            val isPic = tweetPostPic.getJSONObject(j).getString("type")
+                            Log.i("index",j.toString())
                             if (extractedMediaKey == mediaKeyCompare && isPic == "photo") {
-                                val picURL = tweetPostPic.getJSONObject(i).getString("url")
-                                Log.i("URL",picURL)
+                                val picURL = tweetPostPic.getJSONObject(j).getString("url")
+                                Log.i("indexE",j.toString())
                                 val layoutinflater: LayoutInflater = LayoutInflater.from(context)
                                 val view: View = layoutinflater.inflate(R.layout.card,scrollist,false)
                                 val tweetpost = view.findViewById<TextView>(R.id.profileName)
@@ -104,12 +83,12 @@ class DataFetch(val activity: Activity) {
                                 val tweetText = view.findViewById<TextView>(R.id.tweetcontent)
                                 val tweetDate = view.findViewById<TextView>(R.id.date)
                                 val tweetPicture = activity.findViewById<ImageView>(R.id.tweetPicture)
+                                Glide.with(view).load(picURL).into(tweetPicture)
                                 tweetpost.text = userName
                                 tweethandle.text = "@"+handle
                                 tweetDate.text = jsonTweetObj.getString("created_at").substring(0,10)
                                 tweetText.text = jsonTweetObj.getString("text")
-                                Glide.with(context).load(userPic).into(tweetPic)
-                                Glide.with(context).load(picURL).into(tweetPicture)
+                                Glide.with(view).load(userPic).into(tweetPic)
                                 scrollist.addView(view,0)
                             }
                             else if(extractedMediaKey == mediaKeyCompare && isPic !== "photo"){
@@ -131,9 +110,24 @@ class DataFetch(val activity: Activity) {
                             }
                         }
                     }
-                Log.i("END","funEnd")}
-
-
+                    else {
+                        val layoutinflater: LayoutInflater = LayoutInflater.from(context)
+                        val view: View = layoutinflater.inflate(R.layout.card,scrollist,false)
+                        val tweetpost = view.findViewById<TextView>(R.id.profileName)
+                        val tweethandle = view.findViewById<TextView>(R.id.twitterhandle)
+                        val tweetPic = view.findViewById<ImageView>(R.id.profilePic)
+                        val tweetText = view.findViewById<TextView>(R.id.tweetcontent)
+                        val tweetDate = view.findViewById<TextView>(R.id.date)
+                        val tweetPicture = view.findViewById<ImageView>(R.id.tweetPicture)
+                        tweetPicture.visibility = View.GONE
+                        tweetpost.text = userName
+                        tweethandle.text = "@"+handle
+                        tweetDate.text = jsonTweetObj.getString("created_at").substring(0,10)
+                        tweetText.text = jsonTweetObj.getString("text")
+                        Glide.with(view).load(userPic).into(tweetPic)
+                        scrollist.addView(view,0)
+                    }
+                }
             },
             Response.ErrorListener { error ->
                 // TODO: Handle error
