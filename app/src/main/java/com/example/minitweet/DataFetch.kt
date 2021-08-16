@@ -3,7 +3,6 @@ package com.example.minitweet
 import android.app.Activity
 import android.content.Context
 import android.util.Log
-import android.view.Gravity
 import android.view.LayoutInflater
 import android.view.View
 import android.widget.ImageView
@@ -65,6 +64,7 @@ class DataFetch(val activity: Activity) {
                 for (i in 0 until data.length()) {
                     val jsonTweetObj = data.getJSONObject(i)
                     val mediaKey = jsonTweetObj.optJSONObject("attachments")
+                    Log.i("firstIndex",i.toString())
                     if (mediaKey !== null) {
                         val extractedMediaKey = mediaKey.getJSONArray("media_keys").getString(0)
                         val tweetPostPic = response.getJSONObject("includes").getJSONArray("media")
@@ -75,6 +75,7 @@ class DataFetch(val activity: Activity) {
                             if (extractedMediaKey == mediaKeyCompare && isPic == "photo") {
                                 val picURL = tweetPostPic.getJSONObject(j).getString("url")
                                 Log.i("indexE",j.toString())
+                                Log.i("url",picURL)
                                 val layoutinflater: LayoutInflater = LayoutInflater.from(context)
                                 val view: View = layoutinflater.inflate(R.layout.card,scrollist,false)
                                 val tweetpost = view.findViewById<TextView>(R.id.profileName)
@@ -82,7 +83,7 @@ class DataFetch(val activity: Activity) {
                                 val tweetPic = view.findViewById<ImageView>(R.id.profilePic)
                                 val tweetText = view.findViewById<TextView>(R.id.tweetcontent)
                                 val tweetDate = view.findViewById<TextView>(R.id.date)
-                                val tweetPicture = activity.findViewById<ImageView>(R.id.tweetPicture)
+                                val tweetPicture = view.findViewById<ImageView>(R.id.tweetPicture)
                                 Glide.with(view).load(picURL).into(tweetPicture)
                                 tweetpost.text = userName
                                 tweethandle.text = "@"+handle
